@@ -7,11 +7,20 @@ interface Props {
   onText: (t: string) => void;
   onRun: () => void;
   onLoadSample: (index: number) => void;
+  activeSample: number;
   errors: ValidationError[] | null;
   running: boolean;
 }
 
-export default function ScenarioEditor({ text, onText, onRun, onLoadSample, errors, running }: Props) {
+export default function ScenarioEditor({
+  text,
+  onText,
+  onRun,
+  onLoadSample,
+  activeSample,
+  errors,
+  running,
+}: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const importFile = (f: File) => {
@@ -43,7 +52,11 @@ export default function ScenarioEditor({ text, onText, onRun, onLoadSample, erro
       </div>
       <div className="samples">
         {SAMPLES.map((s, i) => (
-          <button key={s.name} className="sample" onClick={() => onLoadSample(i)}>
+          <button
+            key={s.name}
+            className={`sample${i === activeSample ? ' active' : ''}`}
+            onClick={() => onLoadSample(i)}
+          >
             {s.name}
           </button>
         ))}

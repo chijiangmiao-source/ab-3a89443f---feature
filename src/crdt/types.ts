@@ -105,3 +105,89 @@ export type ReplayResult =
       finalZones: string[];
       convergenceDetail: string;
     };
+
+// ---- 单向补传：从任意步骤快照构造可交换状态增量 ----
+
+export interface SyncEndpoint {
+  terminal: string;
+  /** 回放步号（0 = 初始空状态，k = 第 k 步后的全终端快照中的该终端视图） */
+  step: number;
+  view: TerminalView;
+}
+
+/** 增量内事件相对“合并所必需”的角色 */
+export type DeltaEventRole = 'live-add' | 'remove-tombstone' | 'causal-filler';
+
+export interface DeltaEventInfo {
+  eventId: string;
+  kind: 'add' | 'remove';
+  role: DeltaEventRole;
+  zone: string;
+  dot?: string;
+}
+
+export interface PendingNote {
+  terminal: string;
+  messageIds: string[];
+}
+
+/**
+ * 可交换状态增量：只含源快照“已应用事件”的因果闭包
+ * （存活点 live-add + 撤销依据 remove-tombstone + 因果填充 causal-filler），
+ * 暂存（未应用）消息一律不纳入，只在 excludedPending 中标出。
+ */
+export interface SyncDelta {
+  format: 'nfz-or-set-delta';
+  version: 1;
+  source: string;
+  target: string;
+  sourceStep: number;
+  targetStep: number;
+  sourceVector: Vector;
+  targetVector: Vector;
+  /** 源快照已应用事件（因果序、稳定排列） */
+  events: DeltaEventInfo[];
+  /** 其中目标尚未观察、真正需要补传的事件 */
+  newToTarget: string[];
+  /** 未纳入增量的暂存消息（源端 / 目标端） */
+  excludedPending: PendingNote[];
+}
+
+/**
+ * 逐点依据（以接收端 target 为视角）：
+ * - added：增量带来的、目标未见且合并后存活的新增
+ * - kept-concurrent：目标已存活，源端同区撤销的上下文不覆盖该点，并发新增保留
+ * - kept：目标已存活，合并保持
+ * - removed：目标存活点被源端已观察撤销删除，或目标已撤销的点被迟到增量重新带来（不复活）
+ * - suppressed：随因果上下文到达、源端早已撤销的填充点，不进入合并结果
+ */
+export type PointStatus = 'added' | 'kept-concurrent' | 'kept' | 'removed' | 'suppressed';
+
+export interface PointReason {
+  terminal: string; // 点的产生终端（事件 from）
+  zone: string;
+  dot: string;
+  eventId: string;
+  observedBySource: boolean;
+  observedByTarget: boolean;
+  liveInSource: boolean;
+  liveInTarget: boolean;
+  liveInMerged: boolean;
+  status: PointStatus;
+  /** 造成该点被清除的撤销事件（若有） */
+  removedBy: string | null;
+  reason: string;
+}
+
+export interface MergeOutcome {
+  ok: true;
+  delta: SyncDelta;
+  mergedVector: Vector;
+  zones: ZoneView[];
+  points: PointReason[];
+  counts: Record<PointStatus, number>;
+  /** 同一增量在接收端二次应用后结果是否完全不变 */
+  idempotent: boolean;
+}
+
+export type SyncResult = MergeOutcome | { ok: false; errors: ValidationError[] };

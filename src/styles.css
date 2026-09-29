@@ -474,3 +474,277 @@ main {
     position: static;
   }
 }
+
+/* ---- 单向补传面板 ---- */
+.sync {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.sync h4 {
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+
+.sync-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sync-endpoint {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 220px;
+}
+
+.sync-endpoint select {
+  background: #0d1117;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 12px;
+}
+
+.snapshot-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: #0d1117;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+.sync .swap {
+  font-size: 16px;
+  padding: 6px 10px;
+  align-self: flex-end;
+}
+
+.sync-actions {
+  display: flex;
+  gap: 6px;
+  align-self: flex-end;
+}
+
+.sync-errors {
+  margin: 6px 0 0;
+  padding-left: 16px;
+  font-size: 12px;
+}
+
+.sync-result {
+  margin-top: 10px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sync-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badge2 {
+  border: 1px solid;
+  border-radius: 10px;
+  padding: 2px 10px;
+  font-size: 12px;
+}
+
+.badge2.ok {
+  color: var(--ok);
+  border-color: var(--ok);
+}
+
+.badge2.bad {
+  color: var(--bad);
+  border-color: var(--bad);
+}
+
+.badge2.dim {
+  color: var(--dim);
+  border-color: var(--border);
+}
+
+.sync-vectors {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.vec-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #0d1117;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  flex: 1;
+}
+
+.vec-arrow {
+  color: var(--accent);
+  font-size: 18px;
+}
+
+.sync-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.sync-col {
+  background: #0d1117;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.delta-events {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+}
+
+.delta-events li {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.mini-badge {
+  border: 1px solid;
+  border-radius: 8px;
+  padding: 0 7px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.mini-badge.role-live-add {
+  color: var(--ok);
+  border-color: var(--ok);
+}
+
+.mini-badge.role-remove-tombstone {
+  color: var(--bad);
+  border-color: var(--bad);
+}
+
+.mini-badge.role-causal-filler {
+  color: var(--released);
+  border-color: var(--released);
+}
+
+.excluded {
+  border-top: 1px dashed var(--border);
+  padding-top: 6px;
+}
+
+.excluded ul {
+  margin: 4px 0 0;
+  padding-left: 0;
+  list-style: none;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sync-points {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sync-points table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.sync-points th,
+.sync-points td {
+  text-align: left;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.sync-points th {
+  color: var(--dim);
+  font-weight: 600;
+}
+
+.reason-cell {
+  color: var(--dim);
+}
+
+.mini-badge.point-added {
+  color: var(--ok);
+  border-color: var(--ok);
+}
+
+.mini-badge.point-kept-concurrent {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.mini-badge.point-kept {
+  color: var(--dim);
+  border-color: var(--border);
+}
+
+.mini-badge.point-removed {
+  color: var(--bad);
+  border-color: var(--bad);
+}
+
+.mini-badge.point-suppressed {
+  color: var(--warn);
+  border-color: var(--warn);
+}
+
+tr.point-added {
+  background: rgba(63, 185, 80, 0.05);
+}
+
+tr.point-kept-concurrent {
+  background: rgba(88, 166, 255, 0.05);
+}
+
+tr.point-removed {
+  background: rgba(248, 81, 73, 0.05);
+}
+
+tr.point-suppressed {
+  background: rgba(210, 153, 34, 0.05);
+}
+
+button.sample.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+@media (max-width: 960px) {
+  .sync-cols {
+    grid-template-columns: 1fr;
+  }
+}
