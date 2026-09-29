@@ -465,6 +465,182 @@ main {
   margin-top: 2px;
 }
 
+/* ---- 单向补传面板 ---- */
+.backfill {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.backfill h4 {
+  margin: 0 0 4px;
+  font-size: 13px;
+}
+
+.bf-hint {
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+
+.bf-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+
+.bf-snap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 220px;
+}
+
+.bf-snap select {
+  background: #0d1117;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 12px;
+}
+
+.bf-swap {
+  font-size: 16px;
+  padding: 6px 10px;
+}
+
+.bf-controls .primary {
+  align-self: flex-end;
+}
+
+.bf-reapply {
+  margin: 0 0 8px;
+}
+
+.bf-result {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.bf-result .banner ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
+.bf-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.bf-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bf-summary {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  font-size: 12px;
+}
+
+.bf-summary li {
+  padding: 2px 0;
+}
+
+.pt-new {
+  color: var(--ok);
+}
+
+.pt-removed {
+  color: var(--bad);
+}
+
+.pt-suppressed {
+  color: var(--warn);
+}
+
+.bf-excluded {
+  border: 1px solid var(--warn);
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: rgba(210, 153, 34, 0.08);
+  font-size: 12px;
+}
+
+.bf-excluded ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
+.bf-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.bf-table th,
+.bf-table td {
+  text-align: left;
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.bf-table th {
+  color: var(--dim);
+  font-weight: 600;
+}
+
+.pt-row.pt-removed td {
+  background: rgba(248, 81, 73, 0.06);
+}
+
+.pt-row.pt-suppressed td {
+  background: rgba(210, 153, 34, 0.06);
+}
+
+.pt-row.pt-new td {
+  background: rgba(63, 185, 80, 0.06);
+}
+
+.badge[class*='pt-badge'] {
+  white-space: nowrap;
+}
+
+.pt-badge-new {
+  color: var(--ok);
+  border-color: var(--ok);
+}
+
+.pt-badge-live {
+  color: var(--dim);
+  border-color: var(--dim);
+}
+
+.pt-badge-removed {
+  color: var(--bad);
+  border-color: var(--bad);
+}
+
+.pt-badge-suppressed {
+  color: var(--warn);
+  border-color: var(--warn);
+}
+
+@media (max-width: 960px) {
+  .bf-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 960px) {
   .layout {
     grid-template-columns: 1fr;

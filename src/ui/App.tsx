@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ReplayWorker from '../worker/replay.worker?worker';
-import type { ReplayResult, TerminalView } from '../crdt/types';
-import { SAMPLES } from '../samples';
+import { buildMerge, applyDelta } from '../crdt/delta';
+import type { MergeResult, ReplayResult, TerminalView } from '../crdt/types';
+import { BACKFILL_PRESETS, SAMPLES, type BackfillPreset } from '../samples';
 import ScenarioEditor from './ScenarioEditor';
 import Controls from './Controls';
 import TerminalPanel from './TerminalPanel';
 import StepLog from './StepLog';
+import BackfillPanel, { type SnapSelection } from './BackfillPanel';
 
 function emptyView(terminals: string[], inboxTotal: number): TerminalView {
   const vector: Record<string, number> = {};
@@ -15,10 +17,16 @@ function emptyView(terminals: string[], inboxTotal: number): TerminalView {
 
 export default function App() {
   const [text, setText] = useState(() => JSON.stringify(SAMPLES[0].data, null, 2));
+  const [sampleIndex, setSampleIndex] = useState(0);
   const [result, setResult] = useState<ReplayResult | null>(null);
   const [step, setStep] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [source, setSource] = useState<SnapSelection>({ terminal: 'A', localStep: 0 });
+  const [target, setTarget] = useState<SnapSelection>({ terminal: 'B', localStep: 0 });
+  const [merge, setMerge] = useState<MergeResult | null>(null);
   const workerRef = useRef<Worker | null>(null);
+  /** 最近一次实际提交给回放 Worker 的场景对象（补传增量必须基于它构造） */
+  const scenarioRef = useRef<unknown>(null);
 
   useEffect(() => {
     const w = new ReplayWorker();
@@ -26,6 +34,7 @@ export default function App() {
       setResult(e.data);
       setStep(0);
       setPlaying(false);
+      setMerge(null);
     };
     workerRef.current = w;
     return () => w.terminate();
@@ -36,6 +45,7 @@ export default function App() {
     setResult(null);
     setStep(0);
     setPlaying(false);
+    setMerge(null);
     let parsed: unknown;
     try {
       parsed = JSON.parse(jsonText);
@@ -47,12 +57,17 @@ export default function App() {
       return;
     }
     workerRef.current?.postMessage(parsed);
+    scenarioRef.current = parsed;
   }, []);
 
   const loadSample = useCallback(
     (index: number) => {
       const json = JSON.stringify(SAMPLES[index].data, null, 2);
       setText(json);
+      setSampleIndex(index);
+      const terms = (SAMPLES[index].data as { terminals: string[] }).terminals;
+      setSource({ terminal: terms[0], localStep: 0 });
+      setTarget({ terminal: terms[1] ?? terms[0], localStep: 0 });
       run(json);
     },
     [run],
@@ -83,6 +98,81 @@ export default function App() {
   };
 
   const current = step > 0 && step <= total ? steps[step - 1] : null;
+
+  /** 本地步号（该终端自己的第 k 次投递）→ 全局回放步号 */
+  const toGlobalStep = useCallback(
+    (sel: SnapSelection): number => {
+      if (!result || !result.ok) return 0;
+      if (sel.localStep === 0) return 0;
+      const local = result.steps.filter((s) => s.terminal === sel.terminal);
+      return local[Math.min(sel.localStep, local.length) - 1].index + 1;
+    },
+    [result],
+  );
+
+  const computeMerge = useCallback(
+    (src: SnapSelection, dst: SnapSelection) => {
+      if (!result || !result.ok) {
+        setMerge(null);
+        return;
+      }
+      // 非法或不相容的选择由 buildMerge 拒绝；此前补传结果随本次设置一并清空
+      setMerge(
+        buildMerge(
+          scenarioRef.current,
+          result,
+          { terminal: src.terminal, step: toGlobalStep(src) },
+          { terminal: dst.terminal, step: toGlobalStep(dst) },
+        ),
+      );
+    },
+    [result, toGlobalStep],
+  );
+
+  const onSelectChange = useCallback((which: 'source' | 'target', sel: SnapSelection) => {
+    if (which === 'source') setSource(sel);
+    else setTarget(sel);
+    setMerge(null);
+  }, []);
+
+  const onSwap = useCallback(() => {
+    const hadResult = merge !== null;
+    const next = { src: target, dst: source };
+    setSource(next.src);
+    setTarget(next.dst);
+    // 已有补传结果时立即反向构造：标签/向量集合应保持不变（可交换）
+    if (hadResult) computeMerge(next.src, next.dst);
+    else setMerge(null);
+  }, [source, target, merge, computeMerge]);
+
+  const onPreset = useCallback(
+    (p: BackfillPreset) => {
+      const src = { ...p.src };
+      const dst = { ...p.dst };
+      setSource(src);
+      setTarget(dst);
+      computeMerge(src, dst);
+    },
+    [computeMerge],
+  );
+
+  /** 对已合并的接收端状态再次应用同一增量：结果应保持不变（幂等演示） */
+  const reapply = useCallback(() => {
+    if (!merge || !merge.ok) return;
+    const res = applyDelta(scenarioRef.current, merge.delta, {
+      terminal: merge.delta.target,
+      step: merge.delta.targetStep,
+      view: {
+        vector: merge.view.vector,
+        zones: merge.view.zones,
+        pending: [],
+        inboxDone: 0,
+        inboxTotal: 0,
+      },
+    });
+    if (res.ok) setMerge({ ok: true, delta: merge.delta, view: res.view });
+    else setMerge(res);
+  }, [merge]);
 
   return (
     <div className="app">
@@ -140,6 +230,18 @@ export default function App() {
                 ))}
               </div>
               <StepLog steps={steps} current={step} messages={result.messages} onJump={setStep} />
+              <BackfillPanel
+                replay={result}
+                source={source}
+                target={target}
+                onChange={onSelectChange}
+                onSwap={onSwap}
+                onApply={() => computeMerge(source, target)}
+                onReapply={reapply}
+                merge={merge}
+                presets={BACKFILL_PRESETS[sampleIndex] ?? []}
+                onPreset={onPreset}
+              />
             </>
           )}
         </main>

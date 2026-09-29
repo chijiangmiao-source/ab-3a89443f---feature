@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 
 WEB_URL="${WEB_URL:-http://web}"
 
-echo "==> [1/3] 代码测试（vitest：并发收敛 / 乱序暂存释放 / 重复幂等 / 校验拒绝）"
+echo "==> [1/3] 代码测试（vitest：并发收敛 / 乱序暂存释放 / 重复幂等 / 校验拒绝 / 补传增量幂等可交换）"
 npm run test:run
 
 echo "==> [2/3] 构建（tsc 类型检查 + vite 产物）"
